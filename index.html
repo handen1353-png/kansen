@@ -430,7 +430,8 @@
         history: {},
         sessionIds: [],
         sessionIndex: 0,
-        sessionName: ""
+        sessionName: "",
+        sessionAnswers: {}
       };
 
       var sampleQuestions = [
@@ -8512,6 +8513,7 @@
         state.sessionIds = ids.slice();
         state.sessionIndex = 0;
         state.sessionName = name;
+        state.sessionAnswers = {};
         showView("exercise");
         renderExercise();
       }
@@ -8532,7 +8534,9 @@
           state.sessionIndex = Math.min(state.sessionIndex, state.sessionIds.length - 1);
           return renderExercise();
         }
-        var history = getHistory(question.id);
+        var isWrongReview = state.sessionName === "間違えた問題";
+        var savedHistory = getHistory(question.id);
+        var history = isWrongReview ? state.sessionAnswers[String(question.id)] : savedHistory;
         var answered = !!(history && history.answered);
         var choiceHtml = question.choices.map(function (choice, index) {
           var number = index + 1;
@@ -8580,14 +8584,19 @@
 
       function answerQuestion(number) {
         var question = getQuestion(state.sessionIds[state.sessionIndex]);
-        if (!question || getHistory(question.id)) return;
-        state.history[String(question.id)] = {
+        if (!question) return;
+        var isWrongReview = state.sessionName === "間違えた問題";
+        if (isWrongReview && state.sessionAnswers[String(question.id)]) return;
+        if (!isWrongReview && getHistory(question.id)) return;
+        var record = {
           answered: true,
           selected: Number(number),
           isCorrect: question.correct === null ? false : Number(number) === question.correct,
           unscored: question.correct === null,
           answeredAt: new Date().toISOString()
         };
+        state.history[String(question.id)] = record;
+        if (isWrongReview) state.sessionAnswers[String(question.id)] = record;
         saveHistory();
         renderExercise();
       }
