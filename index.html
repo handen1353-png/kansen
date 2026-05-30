@@ -172,6 +172,8 @@
       white-space: pre-wrap;
     }
     .explanation.ai { border-left-color: var(--warning); background: var(--warning-soft); }
+    .reference-explanation { background: #eef7fa; border-left-color: var(--primary); }
+    .reference-explanation strong:first-child { color: var(--primary); font-size: 16px; }
     .nav-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -8347,10 +8349,20 @@
       function cleanExplanation(text) {
         var cleaned = String(text || "");
         [
-          "",
-          "",
+          "原資料から自動抽出しました。",
+          "原資料から自動抽出しました",
+          "正解番号は解答表から登録しました。",
+          "正解番号は解答表から登録しました",
+          "正答一覧から正解を登録しました。",
+          "正答一覧から正解を登録しました",
+          "解説は未登録です。",
+          "解説は未登録です",
+          "解説未登録です。",
+          "解説未登録です",
           "正解は未登録です。",
-          "解答未登録です。"
+          "正解は未登録です",
+          "解答未登録です。",
+          "解答未登録です"
         ].forEach(function (phrase) {
           cleaned = cleaned.split(phrase).join("");
         });
@@ -8358,7 +8370,19 @@
           .replace(/\s*。\s*。/g, "。")
           .replace(/^[\s　。]+|[\s　。]+$/g, "")
           .trim();
-        return cleaned || "解説準備中";
+        return cleaned;
+      }
+
+      function explanationHtml(question) {
+        var cleaned = cleanExplanation(question.explanation);
+        var answerText = question.correct === null ? "未登録" : String(question.correct);
+        var body = cleaned || "この問題の解説は未作成です。";
+        return '<div class="explanation reference-explanation">' +
+          '<strong>チャッピーの参考解説</strong><br>' +
+          '<span class="small muted">正解：' + escapeHtml(answerText) + '</span><br>' +
+          '<strong>解説：</strong><br>' +
+          escapeHtml(body) +
+          '</div>';
       }
 
       function normalizeQuestion(raw, fallbackId) {
@@ -8559,8 +8583,7 @@
           } else {
             resultHtml = '<div class="result incorrect">不正解です。正解は選択肢' + question.correct + 'です。</div>';
           }
-          resultHtml += '<div class="explanation"><strong>解説</strong><br>' +
-            escapeHtml(cleanExplanation(question.explanation)) + '</div>';
+          resultHtml += explanationHtml(question);
         }
         root.innerHTML =
           '<div class="card">' +
