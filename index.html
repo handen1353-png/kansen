@@ -8432,9 +8432,17 @@
         return questions.map(function (raw) {
           var item = Object.assign({}, raw);
           var key = String(item.id);
+
+          // answers.json に正解がある問題だけ採点対象にする。
+          // ない問題は null に統一し、「解答未登録」として扱う。
+          item.correct = null;
           if (Object.prototype.hasOwnProperty.call(answers, key)) {
-            item.correct = answers[key];
+            var answerNumber = Number(answers[key]);
+            item.correct = Number.isFinite(answerNumber) && answerNumber >= 1 && answerNumber <= 4
+              ? answerNumber
+              : null;
           }
+
           if (Object.prototype.hasOwnProperty.call(explanations, key)) {
             var exp = explanations[key];
             item.explanation = typeof exp === "string" ? exp : String((exp && exp.text) || "");
