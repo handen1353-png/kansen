@@ -8416,6 +8416,59 @@
         });
       }
 
+      function loadHistoryState() {
+        try {
+          var savedHistory = safeGet(STORAGE.history);
+          state.history = savedHistory ? JSON.parse(savedHistory) : {};
+          if (!state.history || typeof state.history !== "object" || Array.isArray(state.history)) state.history = {};
+        } catch (error) {
+          state.history = {};
+        }
+      }
+
+      function mergeExternalData(questions, answers, explanations) {
+        answers = answers && typeof answers === "object" ? answers : {};
+        explanations = explanations && typeof explanations === "object" ? explanations : {};
+        return questions.map(function (raw) {
+          var item = Object.assign({}, raw);
+          var key = String(item.id);
+          if (Object.prototype.hasOwnProperty.call(answers, key)) {
+            item.correct = answers[key];
+          }
+          if (Object.prototype.hasOwnProperty.call(explanations, key)) {
+            var exp = explanations[key];
+            item.explanation = typeof exp === "string" ? exp : String((exp && exp.text) || "");
+          }
+          return item;
+        });
+      }
+
+      function fetchJsonFile(fileName) {
+        if (!window.fetch) return Promise.resolve(null);
+        return fetch(fileName, { cache: "no-store" }).then(function (response) {
+          if (!response.ok) return null;
+          return response.json();
+        }).catch(function () {
+          return null;
+        });
+      }
+
+      function loadExternalState() {
+        return Promise.all([
+          fetchJsonFile("questions.json"),
+          fetchJsonFile("answers.json"),
+          fetchJsonFile("explanations.json")
+        ]).then(function (items) {
+          var externalQuestions = items[0];
+          if (!Array.isArray(externalQuestions)) return false;
+          state.questions = normalizeQuestions(mergeExternalData(externalQuestions, items[1], items[2]));
+          loadHistoryState();
+          saveQuestions();
+          renderStorageNotice();
+          return true;
+        });
+      }
+
       function loadState() {
         try {
           var savedQuestions = safeGet(STORAGE.questions);
@@ -8424,15 +8477,19 @@
           state.questions = clone(sampleQuestions);
           toast("保存済み問題を読み込めなかったため、サンプル問題を表示します。");
         }
-        try {
-          var savedHistory = safeGet(STORAGE.history);
-          state.history = savedHistory ? JSON.parse(savedHistory) : {};
-          if (!state.history || typeof state.history !== "object" || Array.isArray(state.history)) state.history = {};
-        } catch (error) {
-          state.history = {};
-        }
+        loadHistoryState();
         saveQuestions();
         renderStorageNotice();
+      }
+
+      function initializeApp() {
+        loadExternalState().then(function (loaded) {
+          if (!loaded) loadState();
+          renderStats();
+        }).catch(function () {
+          loadState();
+          renderStats();
+        });
       }
 
       function saveQuestions() {
@@ -8864,8 +8921,7 @@
       document.getElementById("questionForm").addEventListener("submit", saveEditor);
 
       try {
-        loadState();
-        renderStats();
+        initializeApp();
       } catch (error) {
         document.getElementById("homeView").innerHTML =
           '<div class="card"><h2>読み込みエラー</h2><p>画面の初期化に失敗しました。再読み込みしてください。</p></div>';
