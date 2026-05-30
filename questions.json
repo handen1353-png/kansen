@@ -3571,8 +3571,10 @@
       "選択肢3（未抽出）",
       "選択肢4（未抽出）"
     ],
-    "invalid": false,
-    "qualityFlags": []
+    "invalid": true,
+    "qualityFlags": [
+      "不適格問題"
+    ]
   },
   {
     "id": 197,
@@ -3624,8 +3626,10 @@
       "選択肢3（未抽出）",
       "選択肢4（未抽出）"
     ],
-    "invalid": false,
-    "qualityFlags": []
+    "invalid": true,
+    "qualityFlags": [
+      "不適格問題"
+    ]
   },
   {
     "id": 200,
@@ -3641,8 +3645,10 @@
       "看護師Wが麻疹を発症したのは8月30日と判断し、感染性が出現したと考えられる8月29日\n以降の接触者の麻疹抗体価やワクチン接種歴を確認する。",
       "看護師肌ネ、発疹出現から7日目の9月6日まで就業停止とする。\nb 2 a, d 3 b, C 4 C, d\n20"
     ],
-    "invalid": false,
-    "qualityFlags": []
+    "invalid": true,
+    "qualityFlags": [
+      "不適格問題"
+    ]
   },
   {
     "id": 201,
